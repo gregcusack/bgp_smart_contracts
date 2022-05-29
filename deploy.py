@@ -23,13 +23,22 @@ iana = w3.eth.contract(abi=abi, bytecode=bytecode)
 nonce = w3.eth.get_transaction_count(my_address)
 
 #  Deploy smart contracts  -  Create transaction 
-transaction = iana.constructor().buildTransaction({
+# transaction = iana.constructor().buildTransaction({
+#     "gasPrice": w3.eth.gas_price,
+#     "chainId": chain_id, 
+#     "from": my_address, 
+#     "nonce": nonce
+#     }
+# )
+
+transaction = iana.constructor(my_address).buildTransaction({
     "gasPrice": w3.eth.gas_price,
     "chainId": chain_id, 
     "from": my_address, 
     "nonce": nonce
     }
 )
+
 #  Sign the current transaction  -  Prove that you initiated the transaction 
 signed_txn = w3.eth.account.sign_transaction(transaction, private_key=private_key)
 print("Deploying Contract!")

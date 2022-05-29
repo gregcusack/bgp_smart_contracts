@@ -21,8 +21,8 @@ chain_id = 1337
 my_address = os.getenv("ACCOUNT_ADDRESS")
 private_key = os.getenv("PRIVATE_KEY")
 
-acct2_address = os.getenv("ACCOUNT2_ADDRESS")
-acct2_private_key = os.getenv("ACCOUNT2_PRIVATE_KEY")
+# acct2_address = os.getenv("ACCOUNT2_ADDRESS")
+# acct2_private_key = os.getenv("ACCOUNT2_PRIVATE_KEY")
 
 # ABI (Application Binary Interface), An interface for interacting with methods in a smart contract 
 abi = json.loads(
@@ -38,22 +38,25 @@ nonce = w3.eth.get_transaction_count(my_address)
 iana = w3.eth.contract(address=contract_address, abi=abi)
 
 msgToBeSigned = iana.functions.IANA_getSignatureMessage(13, inAddress).call()
+print(msgToBeSigned)
 msgToBeSignedEncoded = utils.encode_defunct_wrapper(msgToBeSigned) 	# encode msg
-msgSigned = utils.sign_message_wrapper(w3, msgToBeSignedEncoded, acct2_private_key) # sign message
+msgSigned = utils.sign_message_wrapper(w3, msgToBeSignedEncoded, private_key) # sign message
+print(msgSigned)
+
+# addr = iana.functions.recoverSigner(msgToBeSigned, msgSigned).call()
+# print(addr)
+
 msgSignedHash, sigV, sigR, sigS = utils.generate_sig_v_r_s(msgSigned) # generate hash of signed msg, sigV, sigR, sigS
 
+# print(msgSignedHash, sigV, sigR, sigS)
+
 #  call addPrefix Method 
-transaction = iana.functions.IANA_addASNSigned(inASN, inAddress, msgSignedHash, sigV, sigR, sigS).buildTransaction({
-    "gasPrice": w3.eth.gas_price,
-    "chainId": chain_id,
-    "from": my_address,
-    "nonce": nonce
-})
-#  Signature 
-signed_transaction = w3.eth.account.sign_transaction(transaction, private_key=private_key)
-#  Sending transaction 
-tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
-print('add new ASN to ASN Map SIGNED...')
-#  Waiting for the deal to complete 
-tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-print("ASN SIGNED added")
+# transaction = iana.functions.IANA_addASNSigned(inASN, inAddress, msgSignedHash, sigV, sigR, sigS).buildTransaction({
+#     "gasPrice": w3.eth.gas_price,
+#     "chainId": chain_id,
+#     "from": my_address,
+#     "nonce": nonce
+# })
+
+addr = iana.functions.IANA_addASNSigned(inASN, inAddress, sigV, sigR, sigS).call()
+print(addr)

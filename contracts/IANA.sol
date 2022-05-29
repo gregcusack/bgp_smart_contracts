@@ -30,7 +30,8 @@ contract IANA {
         _;
     }
 
-    constructor() public {
+    address importantAddress;
+    constructor(address _importantAddress) public {
         // Automatically add the contract creator as an owner
         ownerMap[msg.sender] = true;
 
@@ -38,6 +39,7 @@ contract IANA {
         ASNMap[0] = address(0);
         // Build up the prefix for the root prefix
         PrefixASNMap[0][0] = 0;
+        importantAddress = _importantAddress;
 
     }
 
@@ -115,10 +117,13 @@ contract IANA {
     /// @param ASN The ASN to be added
     /// @param ASNOwner The public key of the new owner.
     /// @return bytes32 The sha256 hash of abi.encodePacked(ASN,ASNOwner).
-    function IANA_getSignatureMessage(uint32 ASN, address ASNOwner) pure public returns(bytes32) {
-        return sha256(abi.encodePacked(ASN,ASNOwner));
-    }
+    // function IANA_getSignatureMessage(uint32 ASN, address ASNOwner) pure public returns(bytes32) {
+    //     return sha256(abi.encodePacked(ASN,ASNOwner));
+    // }
     
+    function IANA_getSignatureMessage(uint32 ASN, address ASNOwner) pure public returns(bytes32) {
+        return keccak256(abi.encodePacked(ASN,ASNOwner));
+    }
 
     /// Adds an additional ASN to the ASN list. The operation has to include a signature
     /// from the ASN owner signing sha256(abi.encodePacked(ASN,ASNOwner)) which can be
@@ -145,16 +150,28 @@ contract IANA {
     //     ASNMap[ASN] = ASNOwner;
     // }
 
-    function IANA_addASNSigned(uint32 ASN, address ASNOwner, bytes32 msgSignedHashed, uint8 sigV, bytes32 sigR, bytes32 sigS) public onlyOwners {
+    // function IANA_addASNSigned(uint32 ASN, address ASNOwner, bytes32 msgSignedHashed, uint8 sigV, bytes32 sigR, bytes32 sigS) public onlyOwners {
+    function IANA_addASNSigned(uint32 ASN, address ASNOwner, uint8 sigV, bytes32 sigR, bytes32 sigS) public view onlyOwners returns (address) {
+
         // It must be signed by the new ASNOwner. We don't have to check for the IANA owner because
         // the onlyOwners routine does that for us.
         // require(ecrecover(IANA_getSignatureMessage(ASN, ASNOwner), sigV, sigR, sigS) == ASNOwner, "ecrecover failed!");
-        require(ecrecover(msgSignedHashed, sigV, sigR, sigS) == ASNOwner, "ecrecover failed!");
-        require(ASN != 0);
-        require(ASNMap[ASN] == address(0), "ASN<=>ASNOwner mapping already added");
+        // require(ecrecover(msgSignedHashed, sigV, sigR, sigS) == ASNOwner, "ecrecover failed!");
+        // bytes memory prefix = "\x19Ethereum Signed Message:\n32";
+        bytes32 hashASN = IANA_getSignatureMessage(ASN, ASNOwner);
+        // bytes32 prefixedHash = keccak256(abi.encodePacked(prefix, hashASN));
+
+        // address addr = ecrecover(prefixedHash, sigV, sigR, sigS);
+        address addr = ecrecover(hashASN, sigV, sigR, sigS);
+
+        // require( == ASNOwner);
+        
+        // require(ASN != 0);
+        // require(ASNMap[ASN] == address(0), "ASN<=>ASNOwner mapping already added");
         
         // At this point, we have two party agreement on ASN ownership. Add it to the ANSList.
-        ASNMap[ASN] = ASNOwner;
+        // ASNMap[ASN] = ASNOwner;
+        return addr;
     }
 
     /// Removes an ASN to the ASN list. The operation has to include a signature
@@ -188,5 +205,46 @@ contract IANA {
     function IANA_removeOwner(address owner) public onlyOwners {
         delete(ownerMap[owner]);
     }
+
+
+  function splitSignature(bytes memory sig)
+       public
+       pure
+       returns (uint8, bytes32, bytes32)
+   {
+       require(sig.length == 65);
+       
+       bytes32 r;
+       bytes32 s;
+       uint8 v;
+       assembly {
+           // first 32 bytes, after the length prefix
+           r := mload(add(sig, 32))
+           // second 32 bytes
+           s := mload(add(sig, 64))
+           // final byte (first byte of the next 32 bytes)
+           v := byte(0, mload(add(sig, 96)))
+       }
+       return (v, r, s);
+   }
+
+   function recoverSigner(bytes32 message, bytes memory sig)
+       public
+       pure
+       returns (address)
+    {
+       uint8 v;
+       bytes32 r;
+       bytes32 s;
+       (v, r, s) = splitSignature(sig);
+       return ecrecover(message, v, r, s);
+  }
+
+  
+   function isValidData(uint256 _number, string memory _word, bytes memory sig) public view returns(bool){
+       bytes32 message = keccak256(abi.encodePacked(_number, _word));
+       return (recoverSigner(message, sig) == importantAddress);
+   }
+
     
 }
