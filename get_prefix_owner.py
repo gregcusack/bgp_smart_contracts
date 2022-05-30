@@ -5,7 +5,7 @@ from utils.utils import *
 from ipaddress import IPv4Address
 
 if len(sys.argv) < 3:
-    print("please enter an ASN to check if it exists")
+    print("please enter an ip/subnet to get it's owner ASN")
     sys.exit(-1)
 
 inIP = IPv4Address(sys.argv[1])
