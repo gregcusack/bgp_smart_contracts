@@ -1,11 +1,12 @@
 from compile import *
 from dotenv import load_dotenv
 from utils.utils import *
+import sys
 
 load_dotenv()
 
 w3 = Web3(Web3.HTTPProvider(os.getenv("GANACHE_RPC_URL")))
-chain_id = 1337
+chain_id = utils.load_chain_id()
 
 acct0_address, acct0_private_key = utils.load_account_from_env(0)
 
@@ -13,9 +14,7 @@ acct0_address, acct0_private_key = utils.load_account_from_env(0)
 bytecode = compiled_sol["contracts"]["IANA.sol"]["IANA"]["evm"]["bytecode"]["object"]
 
 # ABI (Application Binary Interface), An interface for interacting with methods in a smart contract 
-abi = json.loads(
-    compiled_sol["contracts"]["IANA.sol"]["IANA"]["metadata"]
-    )["output"]["abi"]
+abi = utils.get_contract_abi("IANA")
 
 #  Build smart contract objects 
 iana = w3.eth.contract(abi=abi, bytecode=bytecode)
@@ -23,14 +22,6 @@ iana = w3.eth.contract(abi=abi, bytecode=bytecode)
 nonce = w3.eth.get_transaction_count(acct0_address)
 
 #  Deploy smart contracts  -  Create transaction 
-# transaction = iana.constructor().buildTransaction({
-#     "gasPrice": w3.eth.gas_price,
-#     "chainId": chain_id, 
-#     "from": my_address, 
-#     "nonce": nonce
-#     }
-# )
-
 transaction = iana.constructor().buildTransaction({
     "gasPrice": w3.eth.gas_price,
     "chainId": chain_id, 
@@ -40,13 +31,12 @@ transaction = iana.constructor().buildTransaction({
 )
 
 #  Sign the current transaction  -  Prove that you initiated the transaction 
-signed_txn = w3.eth.account.sign_transaction(transaction, private_key=acct0_private_key)
-print("Deploying Contract!")
+signed_transaction, err = utils.sign_transaction(w3, transaction, acct0_private_key)
+if err:
+    sys.exit(-1)
 
-#  Start deployment  -  Sending transaction 
-tx_hash = w3.eth.send_raw_transaction(signed_txn.rawTransaction)
-print('Waiting for deploy transaction to finish...')
-#  Wait for smart contract deployment results , After deployment , Will get the address of the contract 
-tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+tx_hash, tx_receipt, err = utils.send_transaction(w3, signed_transaction)
+if err:
+    sys.exit(-1)
 print('Deployed Done!')
 print("contract address: " + tx_receipt.contractAddress)

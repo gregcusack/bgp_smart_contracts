@@ -7,6 +7,10 @@ import os
 import json
 from enum import Enum
 
+class AccountType(Enum):
+    TransactionSender = 0
+    MessageSender = 1
+
 # Enum of the validatePrefix() return types
 # @param prefixValid VALID: ip/mask and ASN all match. Valid advertisment
 # @param prefixNotRegistered INVALID: ip/mask advertised is owned by IANA - aka not registered. Could be not registered or non participant
@@ -40,6 +44,20 @@ class utils(object):
         index = str(account_number)
         pub_key = "ACCOUNT" + index + "_ADDRESS"
         priv_key = "ACCOUNT" + index + "_PRIVATE_KEY"
+
+        return os.getenv(pub_key), os.getenv(priv_key)
+
+    @staticmethod
+    def load_account_from_env_v2(env_name):
+        """
+        Loads Ganache accounts from .env
+        :param str/int account_number: Account number to load from ganache (0 indexed)
+        :return: an accounts public and private key
+        """
+
+        load_dotenv()
+        pub_key = env_name + "_ADDRESS"
+        priv_key = env_name + "_PRIVATE_KEY"
 
         return os.getenv(pub_key), os.getenv(priv_key)
 

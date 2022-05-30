@@ -6,7 +6,7 @@ from web3 import Web3
 # https://github.com/iamdefinitelyahuman/py-solc-x
 from solcx import compile_standard, install_solc
 
-with open('./contracts/IANA.sol', 'r', encoding='utf-8') as f:
+with open('../contracts/IANA.sol', 'r', encoding='utf-8') as f:
     iana_file = f.read()
 
 #  download 0.8.0 Version of Solidity compiler 
