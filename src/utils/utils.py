@@ -7,6 +7,12 @@ import os
 import json
 from enum import Enum
 
+class TxErrorType(Enum):
+    OK = 0
+    FailedToSignTx = -1
+    FailedToExecuteTx = -2
+
+
 class AccountType(Enum):
     TransactionSender = 0
     MessageSender = 1

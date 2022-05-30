@@ -19,9 +19,7 @@ def main():
     msg_sender = Account(AccountType.MessageSender, "ACCOUNT1")
     msg_sender.load_account_keys()
 
-
-    # create a transaction object
-    tx_object = Transaction("IANA", "CONTRACT_ADDRESS")
+    tx_sender.generate_transaction_object("IANA", "CONTRACT_ADDRESS")
 
     # data to hash and sign
     data_types = ['uint32', 'address']
@@ -34,26 +32,17 @@ def main():
         sys.exit(-1)
 
     # generate signed message validation data
-    sigV, sigR, sigS = tx_sender.generate_message_validation_data(signed_message)
+    tx_sender.generate_signature_validation_data_from_signed_message(signed_message)
 
     # generate contract transaction
-    tx = tx_object.sc_addASN(tx_sender, inASN, inAddress, sigV, sigR, sigS)
+    tx = tx_sender.tx.sc_addASN(tx_sender.get_nonce(), inASN, inAddress)
 
-    signed_tx, err = tx_object.sign_transaction(tx, tx_sender)
-    if err:
-        print("ERROR: failed to sign transaction")
-        sys.exit(-1)
-
-    tx_hash, tx_receipt, err = tx_object.execute_transaction(signed_tx)
-    if err:
-        print("ERROR: failed to execute transaction")
-        sys.exit(-1)
-
+    # sign and execute transaction
+    tx_hash, tx_receipt, err = tx_sender.tx.sign_and_execute_transaction(tx)
+    if TxErrorType(err) != TxErrorType.OK:
+        print("ERROR: " + str(TxErrorType(err)) + ". Transaction NOT executed")
+        
     print("SUCCESS: ASN<=>Address added")
-
-
-
-
 
 
 if __name__ == "__main__":
