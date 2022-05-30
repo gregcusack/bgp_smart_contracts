@@ -109,6 +109,13 @@ python add_prefix_asn_to_asn.py 13 10.0.0.0 24 0xcF0A72EFd623c7aC7f9886213daFd93
 ------------------------------------------
 
 ## Notes/Thoughts
+prefix_validatePrefix(addvertisedIp, advertisedMask, advertisedASN)
+- all we're checking here is that an ASN and IP/subnet are matched together in the contract.
+- we do not check that the advertisement received was actually sent by the ASN. 
+    - this would require signing BGP updates/announcements. and adding signature in the BGP payload or something.
+- 
+
+
 Check
 - who owns this. 
     - if ASN<=>IP/mask binding returns 0, then IANA owns it. in that case, caller of this function must be IANA? (let's start here)

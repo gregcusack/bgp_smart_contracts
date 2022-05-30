@@ -1,17 +1,19 @@
 from compile import *
 from dotenv import load_dotenv
 import sys
+from utils.utils import *
 from ipaddress import IPv4Address
 
 if len(sys.argv) < 4:
-    print("please enter an ASN, IP, and subnet to validate")
+    print("please enter an ip, subnet, and ASN to check if advertised prefix is valid")
     sys.exit(-1)
 
-inASN = int(sys.argv[1])
-inIP = IPv4Address(sys.argv[2])
-inSubnet = int(sys.argv[3])
+# All we're checking is an ip/subnet<=>ASN binding! Nothing else!
+inIP = IPv4Address(sys.argv[1])
+inSubnet = int(sys.argv[2])
+inASN = int(sys.argv[3])
 
-load_dotenv()
+load_dotenv(override=True)
 
 w3 = Web3(Web3.HTTPProvider(os.getenv("GANACHE_RPC_URL")))
 chain_id = 1337
@@ -27,23 +29,16 @@ abi = json.loads(
 #  call deploy.py Will get contract_address
 contract_address = os.getenv("CONTRACT_ADDRESS")
 
-nonce = w3.eth.get_transaction_count(my_address)
-
 #  Instantiate the contract object 
 iana = w3.eth.contract(address=contract_address, abi=abi)
 
-#  call addPrefix Method 
-transaction = iana.functions.prefix_validatePrefix(int(inIP), inSubnet, inASN).buildTransaction({
-    "gasPrice": w3.eth.gas_price,
-    "chainId": chain_id,
-    "from": my_address,
-    "nonce": nonce
-})
-#  Signature 
-signed_transaction = w3.eth.account.sign_transaction(transaction, private_key=private_key)
-#  Sending transaction 
-tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
-print('validating IP/mask<=>ASN binding...')
-#  Waiting for the deal to complete 
-tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-print("ASN<=>IP/mask validated")
+
+# print("get ASN " + str(inASN) + " from ASN map")
+validationResult = validatePrefixResult(iana.functions.prefix_validatePrefix(int(inIP), inSubnet, inASN).call())
+print(validationResult)
+
+# if str(asn) == "none" or asn == "0":
+#     print("IANA owns the prefix: " + str(inIP) + "/" + str(inSubnet))
+# else:
+#     print("ASN " + str(asn) + " owns the prefix: " + str(inIP) + "/" + str(inSubnet))
+

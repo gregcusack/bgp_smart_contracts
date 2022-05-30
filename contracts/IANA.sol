@@ -1,16 +1,22 @@
 pragma solidity ^0.8.0;
 
 contract IANA {
-    // struct Prefix {
-    //     uint32 ip;
-    //     uint8 mask;
-    //     uint32 owningAS;
-    //     uint[] subPrefixes; // Pointer to prefix index in the larger prefixes array.
-    // }
 
     struct prefix{
         uint32 ip;
         uint8 mask;
+        //could add here the ASN owner of this prefix
+        //could add here the ASN that allocated this prefix to the current ASN owner
+    }
+
+    /// Enum of the validatePrefix() return types
+    /// @param prefixValid VALID: ip/mask and ASN all match. Valid advertisment
+    /// @param prefixNotRegistered INVALID: ip/mask advertised is owned by IANA - aka not registered. Could be not registered or non participant
+    /// @param prefixOwnersDoNotMatch INVALID: The ASN that owns the advertised ip/mask does not match the ASN that advertised the ip/mask. 
+    enum validatePrefixResult {
+        prefixValid,
+        prefixNotRegistered, 
+        prefixOwnersDoNotMatch
     }
     
     // All the people who can change the function pointers
@@ -24,8 +30,6 @@ contract IANA {
     //ASN => List of ip/mask Map
     mapping (uint32 => prefix[]) public ASNPrefixMap;
 
-    // List of prefixes.
-    // Prefix[] public prefixes;
     // Holds the table of links keyed by sha256(encodePacked(ASN1,ASN2))
     // A link is valid if both ASN1->ASN2 and ASN2->ASN1 exist.
     // This particular structure has the potential to be astoundingly large.
@@ -144,21 +148,42 @@ contract IANA {
     }
 
 
-    function prefix_validatePrefix(uint32 ip, uint8 mask, uint32 ASN) public {
-        require (mask <= 32);
+    /// Determines if a given prefix is owned by the advertisedAS.
+    /// all we're checking here is that an ASN and IP/subnet are matched together in the contract.
+    /// we do not check that the advertisement received was actually sent by the ASN. 
+    /// this would require signing BGP updates/announcements. and adding signature in the BGP payload or something.
+    /// NOTE: we don't use "require" here, so spammers could advertise false prefixes all the time \
+    /// which would charge other nodes to keep validating prefixes
+    /// @param advertisedIp The IP address of the prefix to be checked.
+    /// @param advertisedMask The mask of the prefix to be checked.
+    /// @param advertisedASN the ASN of the AS we're checking the prefix against
+    /// @return validatePrefixResult enum indicating VALID advertisement or INVALID advertisement. INVALID has two types (1. owned by IANA/not registered, 2. ASNs do not match)
+    function prefix_validatePrefix(uint32 advertisedIp, uint8 advertisedMask, uint32 advertisedASN) public view returns (validatePrefixResult) {
+        require (advertisedMask <= 32, "Invalid mask");
 
-        //check that there is an IP/mask mapping to an ASN. 
-        uint32 ownerAS = PrefixASNMap[ip][mask];
+        //check that the input IP/mask is owned by the ASN advertising the IP/mask
+        uint32 trueOwnerAS = PrefixASNMap[advertisedIp][advertisedMask];
+        
+        // ensure IP/mask mapping to ASN exists. will be 0 if IP/mask has not been assigned and is owned by IANA
+        // If trueOwnerAS == 0, advertised prefix owned by IANA. Invalid advertisement
+        // Could be not registered or non participant sending the advertisement
+        if (trueOwnerAS == 0) {
+            return validatePrefixResult.prefixNotRegistered;
+        }
 
-        //ensure IP/mask mapping to ASN exists. will be 0 if IP/mask has not been assigned
-        require(ownerAS != 0, "IP/mask in advertisement not registered to assigned to an AS");
+        // Ensure the ASN from advertisement and ASN stored in PrefixASNMap are the same
+        // If not, this is an invalid advertisement
+        if (advertisedASN != trueOwnerAS) {
+            return validatePrefixResult.prefixOwnersDoNotMatch;
+        }       
+
+        return validatePrefixResult.prefixValid;
+
+
         
-        // Ensure the ASN from advertisement and stored in PrefixMap are the same
-        require(ASN == ownerAS, "ASN in advertisement != ASN in PrefixASNMap");
-        
-        // If an ASN has been assigned a prefix, it has to be in this map. This should never trigger.
-        address asnAddress = ASNMap[ownerAS];
-        require (asnAddress != address(0), "ASN not added to ASNMap. BAD THINGS IF WE SEE THIS");
+        // // If an ASN has been assigned a prefix, it has to be in this map. This should never trigger.
+        // address asnAddress = ASNMap[trueOwnerAS];
+        // require (asnAddress != address(0), "ASN not added to ASNMap. BAD THINGS IF WE SEE THIS");
 
 
     }

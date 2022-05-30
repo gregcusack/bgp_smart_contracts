@@ -5,8 +5,17 @@ from dotenv import load_dotenv
 from eth_account.messages import encode_defunct, _hash_eip191_message
 import os
 import json
+from enum import Enum
 
-
+# Enum of the validatePrefix() return types
+# @param prefixValid VALID: ip/mask and ASN all match. Valid advertisment
+# @param prefixNotRegistered INVALID: ip/mask advertised is owned by IANA - aka not registered. Could be not registered or non participant
+# @param prefixOwnersDoNotMatch INVALID: The ASN that owns the advertised ip/mask does not match the ASN that advertised the ip/mask. 
+class validatePrefixResult(Enum):
+    prefixValid = 0
+    prefixNotRegistered = 1
+    prefixOwnersDoNotMatch = 2
+    
 
 class utils(object):
     @staticmethod
