@@ -7,7 +7,7 @@
 2) Implement The following
     - [x] Remove ASN 
     - [x] Remove Prefix
-    - [ ] Validate Prefix
+    - [x] Validate Prefix
 
 ## How to Run (so far)
 - Add ASN, Add Prefix
