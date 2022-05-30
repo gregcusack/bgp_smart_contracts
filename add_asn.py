@@ -15,6 +15,7 @@ chain_id = utils.load_chain_id()
 
 acct0_address, acct0_private_key = utils.load_account_from_env(0)
 acct1_address, acct1_private_key = utils.load_account_from_env(1)
+# acct1_address, acct1_private_key = utils.load_account_from_env(2)
 
 contract_address = utils.load_contract_address("CONTRACT_ADDRESS")
 

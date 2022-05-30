@@ -18,14 +18,14 @@ load_dotenv()
 w3 = Web3(Web3.HTTPProvider(os.getenv("GANACHE_RPC_URL")))
 chain_id = utils.load_chain_id()
 
-acct0_address, acct0_private_key = utils.load_account_from_env(0)
-acct1_address, acct1_private_key = utils.load_account_from_env(1)
+acct1_address, acct1_private_key = utils.load_account_from_env(1) # current owner
+acct2_address, acct2_private_key = utils.load_account_from_env(2) # new owner
 
 contract_address = utils.load_contract_address("CONTRACT_ADDRESS")
 
 # ABI (Application Binary Interface), An interface for interacting with methods in a smart contract 
 abi = utils.get_contract_abi("IANA")
-nonce = w3.eth.get_transaction_count(acct0_address)
+nonce = w3.eth.get_transaction_count(acct1_address)
 
 #  Instantiate the contract object 
 iana = w3.eth.contract(address=contract_address, abi=abi)
@@ -35,7 +35,7 @@ base_message, signed_message, err = utils.hash_and_sign_message(
     w3,
     ['uint32', 'uint8', 'uint32', 'address'], #ip, mask, ASN, AS Address
     [int(inIP), inSubnet, inASN, inAsnAddress],
-    acct1_private_key
+    acct2_private_key
 )
 if err:
     print("ERROR: failed to hash and sign message")
@@ -50,11 +50,11 @@ sigV, sigR, sigS = utils.generate_message_validation_data(signed_message)
 transaction = iana.functions.prefix_addPrefix(int(inIP), inSubnet, inASN, sigV, sigR, sigS).buildTransaction({
     "gasPrice": w3.eth.gas_price,
     "chainId": chain_id,
-    "from": acct0_address,
+    "from": acct1_address,
     "nonce": nonce
 })
 
-signed_transaction, err = utils.sign_transaction(w3, transaction, acct0_private_key)
+signed_transaction, err = utils.sign_transaction(w3, transaction, acct1_private_key)
 if err:
     sys.exit(-1)
 
