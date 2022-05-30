@@ -6,7 +6,7 @@
         - Aka I should be able to toggle between any of the three accounts across all python scripts instead of having to go in and change the account we're reading from in the env file. it's confusing lol
 2) Implement The following
     - [x] Remove ASN 
-    - [ ] Remove Prefix
+    - [x] Remove Prefix
     - [ ] Validate Prefix
 
 ## How to Run (so far)
