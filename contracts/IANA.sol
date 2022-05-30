@@ -1,11 +1,16 @@
 pragma solidity ^0.8.0;
 
 contract IANA {
-    struct Prefix {
+    // struct Prefix {
+    //     uint32 ip;
+    //     uint8 mask;
+    //     uint32 owningAS;
+    //     uint[] subPrefixes; // Pointer to prefix index in the larger prefixes array.
+    // }
+
+    struct prefix{
         uint32 ip;
         uint8 mask;
-        uint32 owningAS;
-        uint[] subPrefixes; // Pointer to prefix index in the larger prefixes array.
     }
     
     // All the people who can change the function pointers
@@ -15,9 +20,12 @@ contract IANA {
 
     // ip => masks => ASN
     mapping (uint32 => mapping(uint8 => uint32)) public PrefixASNMap;
+    
+    //ASN => List of ip/mask Map
+    mapping (uint32 => prefix[]) public ASNPrefixMap;
 
     // List of prefixes.
-    Prefix[] public prefixes;
+    // Prefix[] public prefixes;
     // Holds the table of links keyed by sha256(encodePacked(ASN1,ASN2))
     // A link is valid if both ASN1->ASN2 and ASN2->ASN1 exist.
     // This particular structure has the potential to be astoundingly large.
@@ -62,6 +70,11 @@ contract IANA {
         // The owning ASN must have signed the message.
         require(ecrecover(IANA_getPrefixSignatureMessage(ip, mask, newOwnerAS, newOwnerAddress), sigV, sigR, sigS) == newOwnerAddress, "ERROR: ecrecover failed");
 
+        //create the new prefix struct and populate it
+        prefix memory newPrefix;
+        newPrefix.ip = ip;
+        newPrefix.mask = mask;
+
         // check who currently owns this ip/mask combo. 
         //If 0 owns, that means IANA owns it. Ensure IANA is calling this function.
         if (PrefixASNMap[ip][mask] == 0) {
@@ -73,9 +86,25 @@ contract IANA {
             // The caller MUST call this function to transfer IP/mask to another ASN
             uint32 currentOwnerASN = PrefixASNMap[ip][mask];
             require (msg.sender == ASNMap[currentOwnerASN]);
-        }
 
-        PrefixASNMap[ip][mask] = newOwnerAS;
+            //remove ownership of prefix from the old owner
+            prefix[] memory prefixes = ASNPrefixMap[currentOwnerASN];
+            //loop through all prefixes owned by the currentOwnerASN
+            //Find the prefix that we're trying to give to the newOwnerAS
+            //Delete the prefix from the currentOwnerASN ASNPrefixMap
+            for(uint32 i = 0; i < prefixes.length; i++) {
+                if(helper_prefixesEqual(prefixes[i], newPrefix)) {
+                    removePrefixASNPrefixMap(currentOwnerASN, i);
+                }
+            }
+        }
+        
+        //Update prefix<=>ASN map
+        PrefixASNMap[newPrefix.ip][newPrefix.mask] = newOwnerAS;
+
+        //Update ASN<=>prefix map
+        ASNPrefixMap[newOwnerAS].push(newPrefix);
+
     }
 
     function prefix_validatePrefix(uint32 ip, uint8 mask, uint32 ASN) public {
@@ -148,14 +177,22 @@ contract IANA {
     /// @param sigR The R parameter of the signature.
     /// @param sigS The S parameter of the signature.
     function IANA_removeASN(uint32 ASN, address ASNOwner, uint8 sigV, bytes32 sigR, bytes32 sigS) public onlyOwners {
-        // Get hash of the packed message that was signed.
-        bytes32 msghash = sha256(abi.encodePacked(ASN,ASNOwner));
-        // It must be signed by the new ASNOwner. We don't have to check for the IANA owner because
+        // ensure message we have received is signed by the current ASNOwner. We don't have to check for the IANA owner because
         // the onlyOwners routine does that for us.
-        require(ecrecover(msghash, sigV, sigR, sigS) == ASNOwner);
+        require(ecrecover(IANA_getSignatureMessage(ASN, ASNOwner), sigV, sigR, sigS) == ASNOwner);
+
         require(ASN != 0);
-        
-        // At this point, we have two party agreement on ASN ownership. Mark the ASN as unowned
+
+        //Return any owned prefix to IANA
+        //Set ownership of prefix to 0 (aka IANA)
+        for (uint i=0; i<ASNPrefixMap[ASN].length; i++) {
+            prefix memory prefixToReturn = ASNPrefixMap[ASN][i];
+            PrefixASNMap[prefixToReturn.ip][prefixToReturn.mask] = 0;
+        }
+        //delete the ASN from the ASNPrefix map which will delete the ASN's ownership over its prefixes
+        delete(ASNPrefixMap[ASN]);
+
+         // At this point, we have two party agreement on ASN ownership. Mark the ASN as unowned
         ASNMap[ASN] = address(0);
     }
 
@@ -170,4 +207,48 @@ contract IANA {
     function IANA_removeOwner(address owner) public onlyOwners {
         delete(ownerMap[owner]);
     }
+
+    /// Returns the ASN for given IP/mask prefix, or 0 if IANA owns the Prefix.
+    /// @param ip The ip
+    /// @param mask the mask
+    /// @return uint32 the ASN that owns the prefix
+    function getPrefixOwner(uint32 ip, uint8 mask) public view returns (uint32) {
+        // Only valid subnet masks
+        require (mask <= 32, "invalid subnet");
+        return PrefixASNMap[ip][mask];
+    }
+
+    /// Returns all Prefixes for any given ASN in ASNMap.
+    /// @param ASN the ASN whose prefixes you want
+    /// @return prefix[] list of the prefixes owned by the ASN
+    function getAllPrefixesOwnedByASN(uint32 ASN) public view returns (prefix[] memory) {
+        //ensure ASN is in map. If not, they don't have prefixes
+        address asnAddress = ASNMap[ASN];
+        // The owning ASN must exist
+        require (asnAddress != address(0), "ASN not added to ASNMap");
+        
+        //return prefixes
+        return ASNPrefixMap[ASN];
+
+    }
+
+    /// Compares two prefixes together
+    /// @param prefix1 prefix 1
+    /// @param prefix2 prefix 2
+    /// @return bool returns true if prefix structs are equal
+    function helper_prefixesEqual(prefix memory prefix1, prefix memory prefix2) internal view returns (bool) {
+        bytes32 p1_hash = keccak256(abi.encodePacked(prefix1.ip, prefix1.mask));
+        bytes32 p2_hash = keccak256(abi.encodePacked(prefix2.ip, prefix2.mask));
+        return p1_hash == p2_hash;
+    }
+
+    /// Removes element from array. Does not maintain order of array! But it is cheap
+    /// @param index index of array to remove
+    /// @param currentOwnerASN ASN of prefix to remove from ASN
+    function removePrefixASNPrefixMap(uint32 currentOwnerASN, uint32 index) internal {
+        uint256 prefixArrayLen = ASNPrefixMap[currentOwnerASN].length;
+        ASNPrefixMap[currentOwnerASN][index] = ASNPrefixMap[currentOwnerASN][prefixArrayLen - 1];
+        ASNPrefixMap[currentOwnerASN].pop();
+    }   
+
 }
