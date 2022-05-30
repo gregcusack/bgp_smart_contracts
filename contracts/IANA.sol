@@ -52,12 +52,28 @@ contract IANA {
         require (mask <= 32);
         // Get the ASN's owner
         address newOwnerAddress = ASNMap[newOwnerAS];
+
         // The owning ASN must exist
         require (newOwnerAddress != address(0), "ASN not added to ASNMap");
 
+        // check we haven't already added this ip/mask <=> ASN binding
+        require(PrefixASNMap[ip][mask] != newOwnerAS, "ip/mask <=> ASN binding already exists");
 
         // The owning ASN must have signed the message.
-        require(ecrecover(IANA_getPrefixSignatureMessage(ip, mask, newOwnerAS, newOwnerAddress), sigV, sigR, sigS) == newOwnerAddress);
+        require(ecrecover(IANA_getPrefixSignatureMessage(ip, mask, newOwnerAS, newOwnerAddress), sigV, sigR, sigS) == newOwnerAddress, "ERROR: ecrecover failed");
+
+        // check who currently owns this ip/mask combo. 
+        //If 0 owns, that means IANA owns it. Ensure IANA is calling this function.
+        if (PrefixASNMap[ip][mask] == 0) {
+            require (ownerMap[msg.sender] == true, "IANA currently owns IP/mask, IANA MUST call this function to allocate IP/mask to another entity");
+        } 
+        else {
+            // If IANA does not own it, then someone else owns it. 
+            // Ensure the caller of this function owns the IP/mask.
+            // The caller MUST call this function to transfer IP/mask to another ASN
+            uint32 currentOwnerASN = PrefixASNMap[ip][mask];
+            require (msg.sender == ASNMap[currentOwnerASN]);
+        }
 
         PrefixASNMap[ip][mask] = newOwnerAS;
     }
@@ -87,7 +103,7 @@ contract IANA {
     /// @return bytes32 The keccak hash of abi.encodePacked(ASN,ASNOwner).
     function IANA_getPrefixSignatureMessage(uint32 ip, uint8 mask, uint32 ASN, address ASNOwner) pure public returns(bytes32) {
         bytes32 base_message = keccak256(abi.encodePacked(ip, mask, ASN, ASNOwner));
-        return sha256(abi.encodePacked("\x19Ethereum Signed Message:\n32", base_message));
+        return keccak256(abi.encodePacked("\x19Ethereum Signed Message:\n32", base_message));
     }
     
     /// Returns the owner's address for the given ASN, or 0 if no one owns the ASN.
