@@ -32,13 +32,6 @@ contract_address = os.getenv("CONTRACT_ADDRESS")
 #  Instantiate the contract object 
 iana = w3.eth.contract(address=contract_address, abi=abi)
 
-
-# print("get ASN " + str(inASN) + " from ASN map")
+# Validate the prefix<=>ASN mapping. Returns an enum.
 validationResult = validatePrefixResult(iana.functions.prefix_validatePrefix(int(inIP), inSubnet, inASN).call())
 print(validationResult)
-
-# if str(asn) == "none" or asn == "0":
-#     print("IANA owns the prefix: " + str(inIP) + "/" + str(inSubnet))
-# else:
-#     print("ASN " + str(asn) + " owns the prefix: " + str(inIP) + "/" + str(inSubnet))
-
