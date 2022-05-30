@@ -1,5 +1,12 @@
+from compile import *
 from web3 import Web3
 from eth_account.messages import encode_defunct
+from dotenv import load_dotenv
+from eth_account.messages import encode_defunct, _hash_eip191_message
+import os
+import json
+
+
 
 class utils(object):
     @staticmethod
@@ -11,23 +18,151 @@ class utils(object):
     @staticmethod
     def to_32byte_hex(val):
         return Web3.toHex(Web3.toBytes(val).rjust(32, b'\0'))
+   
+    @staticmethod
+    def load_account_from_env(account_number):
+        """
+        Loads Ganache accounts from .env
+        :param str/int account_number: Account number to load from ganache (0 indexed)
+        :return: an accounts public and private key
+        """
+
+        load_dotenv()
+        index = str(account_number)
+        pub_key = "ACCOUNT" + index + "_ADDRESS"
+        priv_key = "ACCOUNT" + index + "_PRIVATE_KEY"
+
+        return os.getenv(pub_key), os.getenv(priv_key)
 
     @staticmethod
-    def encode_defunct_wrapper(msgToBeSigned):
-        return encode_defunct(text=msgToBeSigned.hex())
+    def load_chain_id():
+        """
+        returns chain ID
+        :return chain id from .env
+        """
+
+        load_dotenv()
+        return int(os.getenv("CHAIN_ID"))
 
     @staticmethod
-    def sign_message_wrapper(w3, msgToBeSigned, acct2_priv_key):
-        return w3.eth.account.sign_message(msgToBeSigned, private_key=acct2_priv_key)
+    def load_contract_address(contract_name):
+        """
+        returns contract address
+        :param contract_name: name of contract. load it's address
+        :return contract address from .env
+        """
+
+        load_dotenv()
+        return os.getenv(contract_name)
+
+    # ABI (Application Binary Interface), An interface for interacting with methods in a smart contract 
+    @staticmethod
+    def get_contract_abi(contract_name):
+        """
+        Returns ABI for the contract_name passed in
+        :param str contract_name: name of contract we want to get ABI from
+        :return: contract abi
+        """
+
+        return json.loads(
+            compiled_sol["contracts"][contract_name + ".sol"][contract_name]
+            ["metadata"])["output"]["abi"]
 
     @staticmethod
-    def generate_sig_v_r_s(msgSigned):
-        msgSignedHash   = Web3.toHex(msgSigned.messageHash)
-        sigV            = msgSigned.v
-        # sigR            = utils.to_32byte_hex(msgSigned.r)
-        # sigS            = utils.to_32byte_hex(msgSigned.s)
-        sigR = msgSigned.r
-        sigS = msgSigned.s
-        print(type(sigR))
+    def hash_and_sign_message(w3, argument_types, arguments, priv_key):
+        """
+        takes in data types and corresponding data. hashes the data and signs it.
+        returns the hashed message and signed message
 
-        return msgSignedHash, sigV, sigR, sigS
+        :param web3 w3: web3 object
+        :param list argument_types: types of arguments to be hashed e.g.: [uint32t, address]
+        :param list arguments: arguments to be hashed e.g.: [14, <public_key>]
+        :param string priv_key: private key of the user signing the message (aka calling this func.)
+
+        :return: hashed message, signed message, error_code
+        """
+
+        if(len(argument_types) != len(arguments)):
+            print("ERROR: len(argument_types) != len(arguments)")
+            return None, None, -1
+        
+        # append data, and hash it
+        base_message = Web3.solidityKeccak(argument_types, arguments)
+        message = encode_defunct(primitive=base_message)
+
+        # sign message w/ private key
+        signed_message = w3.eth.account.sign_message(message, private_key=priv_key)
+
+        return base_message, signed_message, 0
+
+    @staticmethod
+    def generate_message_validation_data(signed_message):
+        """
+        Takes in signed message we need to validate.
+        Generates and returns sigV, sigR, sigS
+
+        :param string signed_message: signed_message we are trying to validate
+
+        :return: sigV, sigR, sigS, error_code
+        """
+
+        # get the signature of the signed message - convert to hex and then to bytes
+        hex_signature = signed_message.signature.hex()
+        sig = Web3.toBytes(hexstr=hex_signature)
+
+        # generate and return sigV, sigR, sigS
+        v, hex_r, hex_s = Web3.toInt(sig[-1]), Web3.toHex(sig[:32]), Web3.toHex(sig[32:64])
+        return v, hex_r, hex_s
+
+    @staticmethod
+    def sign_transaction(w3, transaction, priv_key):
+        """ 
+        Takes in signed message we need to validate.
+        Generates and returns sigV, sigR, sigS
+
+        :param web3 w3: web3 object
+        :param transaction transaction: transaction to sign and execute
+        :param string priv_key: private key of the user signing and executing the transaction
+
+        :return: signed_transaction, error
+        """
+
+        try:
+            #  Signature 
+            signed_transaction = w3.eth.account.sign_transaction(transaction, private_key=priv_key)
+        except Exception as e:
+            print("ERROR: Failed to sign transaction!")   
+            return None, -1
+
+        return signed_transaction, 0
+
+    @staticmethod
+    def send_transaction(w3, signed_transaction):
+        """ 
+        Takes in signed message we need to validate.
+        Generates and returns sigV, sigR, sigS
+
+        :param web3 w3: web3 object
+        :param signed_transaction signed_transaction: signed transaction to send
+
+        :return: tx_hash, tx_receipt, error
+        """
+
+        try:
+            print("sending transaction...")
+            tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
+
+            print("waiting for transaction to complete...")
+            tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
+        except Exception as e:
+            print("ERROR: Failed to sign transaction!")   
+            return None, None, -1   
+
+        return tx_hash, tx_receipt, 0  
+        
+
+
+            
+           
+       
+        
