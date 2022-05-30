@@ -49,7 +49,6 @@ contract IANA {
 
     }
 
-
     /// Adds the specified prefix to the prefix table. Must be done by the owner of the prefixes containing
     /// AS and must include the signature of the message returned by IANA_getPrefixSignatureMessage for the new AS.
     /// @param ip The IP address of the prefix to add
@@ -106,6 +105,44 @@ contract IANA {
         ASNPrefixMap[newOwnerAS].push(newPrefix);
 
     }
+
+    //remove prefix from ASN and return to IANA
+    /// @param ip The IP address of the prefix to remove
+    /// @param mask The number of bits in the netmask of the prefix to remove
+    function prefix_removePrefix(uint32 ip, uint8 mask) public {
+        // Only valid subnet masks
+        require (mask <= 32);
+
+        uint32 currentOwnerASN = getPrefixOwner(ip, mask);
+        require(currentOwnerASN != 0, "ERROR: prefix owned by IANA, can't remove");
+        
+        address owningASAddress = ASNMap[currentOwnerASN];
+
+        // Require that the public address calling us owns the prefix
+        // (aka you can't remove a prefix that you don't own)
+        require (msg.sender == owningASAddress, "ERROR: Caller of method does not own the prefix they're trying to remove!");
+
+        //create the prefix struct and populate it
+        prefix memory prefixToRemove;
+        prefixToRemove.ip = ip;
+        prefixToRemove.mask = mask;
+
+        //remove ownership of prefix from the old owner
+        prefix[] memory prefixes = ASNPrefixMap[currentOwnerASN];
+        //loop through all prefixes owned by the currentOwnerASN
+        //Find the prefix that we're trying to remove
+        //Delete the prefix from the currentOwnerASN ASNPrefixMap
+        //This will remove ownership from currentOwnerASN
+        for(uint32 i = 0; i < prefixes.length; i++) {
+            if(helper_prefixesEqual(prefixes[i], prefixToRemove)) {
+                removePrefixASNPrefixMap(currentOwnerASN, i);
+            }
+        }
+
+        PrefixASNMap[ip][mask] = 0; //Set ownership of prefix passed in to IANA
+
+    }
+
 
     function prefix_validatePrefix(uint32 ip, uint8 mask, uint32 ASN) public {
         require (mask <= 32);
