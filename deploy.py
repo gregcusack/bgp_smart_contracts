@@ -1,13 +1,13 @@
 from compile import *
 from dotenv import load_dotenv
+from utils.utils import *
 
 load_dotenv()
 
 w3 = Web3(Web3.HTTPProvider(os.getenv("GANACHE_RPC_URL")))
 chain_id = 1337
 
-my_address = os.getenv("ACCOUNT_ADDRESS")
-private_key = os.getenv("PRIVATE_KEY")
+acct0_address, acct0_private_key = utils.load_account_from_env(0)
 
 #  Compiled bytecode of smart contract （ Data on the chain ）
 bytecode = compiled_sol["contracts"]["IANA.sol"]["IANA"]["evm"]["bytecode"]["object"]
@@ -20,7 +20,7 @@ abi = json.loads(
 #  Build smart contract objects 
 iana = w3.eth.contract(abi=abi, bytecode=bytecode)
 #  Of the last transaction in the current blockchain nonce
-nonce = w3.eth.get_transaction_count(my_address)
+nonce = w3.eth.get_transaction_count(acct0_address)
 
 #  Deploy smart contracts  -  Create transaction 
 # transaction = iana.constructor().buildTransaction({
@@ -31,16 +31,16 @@ nonce = w3.eth.get_transaction_count(my_address)
 #     }
 # )
 
-transaction = iana.constructor(my_address).buildTransaction({
+transaction = iana.constructor().buildTransaction({
     "gasPrice": w3.eth.gas_price,
     "chainId": chain_id, 
-    "from": my_address, 
+    "from": acct0_address, 
     "nonce": nonce
     }
 )
 
 #  Sign the current transaction  -  Prove that you initiated the transaction 
-signed_txn = w3.eth.account.sign_transaction(transaction, private_key=private_key)
+signed_txn = w3.eth.account.sign_transaction(transaction, private_key=acct0_private_key)
 print("Deploying Contract!")
 
 #  Start deployment  -  Sending transaction 

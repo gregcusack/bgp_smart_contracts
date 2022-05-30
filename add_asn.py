@@ -56,4 +56,4 @@ tx_hash, tx_receipt, err = utils.send_transaction(w3, signed_transaction)
 if err:
     sys.exit(-1)
 
-print("SUCCESS: ASN<=>IP/mask added")
+print("SUCCESS: ASN<=>Address added")
