@@ -18,23 +18,6 @@ class utils(object):
     @staticmethod
     def to_32byte_hex(val):
         return Web3.toHex(Web3.toBytes(val).rjust(32, b'\0'))
-
-    @staticmethod
-    def encode_defunct_wrapper(msgToBeSigned):
-        return encode_defunct(text=msgToBeSigned.hex())
-
-    @staticmethod
-    def sign_message_wrapper(w3, msgToBeSigned, acct2_priv_key):
-        return w3.eth.account.sign_message(msgToBeSigned, private_key=acct2_priv_key)
-
-    @staticmethod
-    def generate_sig_v_r_s(signed_message):
-        signed_message_hash   = Web3.toHex(signed_message.messageHash)
-        sigV            = signed_message.v
-        sigR            = utils.to_32byte_hex(signed_message.r)
-        sigS            = utils.to_32byte_hex(signed_message.s)
-
-        return signed_message_hash, sigV, sigR, sigS
    
     @staticmethod
     def load_account_from_env(account_number):
