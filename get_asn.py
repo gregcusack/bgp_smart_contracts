@@ -9,7 +9,7 @@ if len(sys.argv) < 2:
 
 inASN = int(sys.argv[1])
 
-load_dotenv()
+load_dotenv(override=True)
 
 w3 = Web3(Web3.HTTPProvider(os.getenv("GANACHE_RPC_URL")))
 chain_id = 1337
@@ -28,7 +28,8 @@ contract_address = os.getenv("CONTRACT_ADDRESS")
 #  Instantiate the contract object 
 iana = w3.eth.contract(address=contract_address, abi=abi)
 
-print("get ASN " + str(inASN) + " from ASN map")
+
+# print("get ASN " + str(inASN) + " from ASN map")
 asn = iana.functions.IANA_getASNOwner(inASN).call()
 
 if str(asn) == "none" or utils.is_null_address(asn):

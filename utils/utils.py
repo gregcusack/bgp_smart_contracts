@@ -24,7 +24,10 @@ class utils(object):
     def generate_sig_v_r_s(msgSigned):
         msgSignedHash   = Web3.toHex(msgSigned.messageHash)
         sigV            = msgSigned.v
-        sigR            = utils.to_32byte_hex(msgSigned.r)
-        sigS            = utils.to_32byte_hex(msgSigned.s)
+        # sigR            = utils.to_32byte_hex(msgSigned.r)
+        # sigS            = utils.to_32byte_hex(msgSigned.s)
+        sigR = msgSigned.r
+        sigS = msgSigned.s
+        print(type(sigR))
 
         return msgSignedHash, sigV, sigR, sigS
