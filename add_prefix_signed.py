@@ -44,10 +44,6 @@ msgToBeSignedEncoded = utils.encode_defunct_wrapper(msgToBeSigned) 	# encode msg
 msgSigned = utils.sign_message_wrapper(w3, msgToBeSignedEncoded, acct2_private_key) # sign message
 msgSignedHash, sigV, sigR, sigS = utils.generate_sig_v_r_s(msgSigned) # generate hash of signed msg, sigV, sigR, sigS
 
-
-
-
-
 #  call addPrefix Method 
 transaction = iana.functions.prefix_addPrefixSigned(int(inIP), inSubnet, inASN, msgSignedHash, sigV, sigR, sigS).buildTransaction({
     "gasPrice": w3.eth.gas_price,
@@ -62,5 +58,4 @@ tx_hash = w3.eth.send_raw_transaction(signed_transaction.rawTransaction)
 print('add new ASN<=>IP/mask binding to contract...')
 #  Waiting for the deal to complete 
 tx_receipt = w3.eth.wait_for_transaction_receipt(tx_hash)
-print(tx_receipt)
 print("ASN<=>IP/mask added")
