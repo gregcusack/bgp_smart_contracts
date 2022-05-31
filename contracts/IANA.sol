@@ -30,12 +30,6 @@ contract IANA {
     //ASN => List of ip/mask Map
     mapping (uint32 => prefix[]) public ASNPrefixMap;
 
-    // Holds the table of links keyed by sha256(encodePacked(ASN1,ASN2))
-    // A link is valid if both ASN1->ASN2 and ASN2->ASN1 exist.
-    // This particular structure has the potential to be astoundingly large.
-    mapping (bytes32 => bool) links;
-
-
     /// Simple modifier to ensure that only owners can make changes
     modifier onlyOwners {
         require(ownerMap[msg.sender] == true);
@@ -97,7 +91,7 @@ contract IANA {
             //Delete the prefix from the currentOwnerASN ASNPrefixMap
             for(uint32 i = 0; i < prefixes.length; i++) {
                 if(helper_prefixesEqual(prefixes[i], newPrefix)) {
-                    removePrefixASNPrefixMap(currentOwnerASN, i);
+                    helper_removePrefixASNPrefixMap(currentOwnerASN, i);
                 }
             }
         }
@@ -139,7 +133,7 @@ contract IANA {
         //This will remove ownership from currentOwnerASN
         for(uint32 i = 0; i < prefixes.length; i++) {
             if(helper_prefixesEqual(prefixes[i], prefixToRemove)) {
-                removePrefixASNPrefixMap(currentOwnerASN, i);
+                helper_removePrefixASNPrefixMap(currentOwnerASN, i);
             }
         }
 
@@ -178,14 +172,6 @@ contract IANA {
         }       
 
         return validatePrefixResult.prefixValid;
-
-
-        
-        // // If an ASN has been assigned a prefix, it has to be in this map. This should never trigger.
-        // address asnAddress = ASNMap[trueOwnerAS];
-        // require (asnAddress != address(0), "ASN not added to ASNMap. BAD THINGS IF WE SEE THIS");
-
-
     }
 
     /// Generates the message text to be signed for add authentication.
@@ -244,6 +230,7 @@ contract IANA {
         require(ecrecover(IANA_getSignatureMessage(ASN, ASNOwner), sigV, sigR, sigS) == ASNOwner);
 
         require(ASN != 0);
+        require(ASNMap[ASN] != address(0), "ERROR: ASN is not added to ASNMap. It's not registered.");
 
         //Return any owned prefix to IANA
         //Set ownership of prefix to 0 (aka IANA)
@@ -307,7 +294,7 @@ contract IANA {
     /// Removes element from array. Does not maintain order of array! But it is cheap
     /// @param index index of array to remove
     /// @param currentOwnerASN ASN of prefix to remove from ASN
-    function removePrefixASNPrefixMap(uint32 currentOwnerASN, uint32 index) internal {
+    function helper_removePrefixASNPrefixMap(uint32 currentOwnerASN, uint32 index) internal {
         uint256 prefixArrayLen = ASNPrefixMap[currentOwnerASN].length;
         ASNPrefixMap[currentOwnerASN][index] = ASNPrefixMap[currentOwnerASN][prefixArrayLen - 1];
         ASNPrefixMap[currentOwnerASN].pop();
