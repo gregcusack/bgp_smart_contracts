@@ -230,6 +230,7 @@ contract IANA {
         require(ecrecover(IANA_getSignatureMessage(ASN, ASNOwner), sigV, sigR, sigS) == ASNOwner);
 
         require(ASN != 0);
+        require(ASNMap[ASN] != address(0), "ERROR: ASN is not added to ASNMap. It's not registered.");
 
         //Return any owned prefix to IANA
         //Set ownership of prefix to 0 (aka IANA)

@@ -1,31 +1,29 @@
-from compile import *
-from dotenv import load_dotenv
-import sys
-from utils.utils import *
+from Classes.Account import Account
+from Utils.Utils import *
 from ipaddress import IPv4Address
+import sys
 
-if len(sys.argv) < 4:
-    print("please enter an ip, subnet, and ASN to check if advertised prefix is valid")
-    sys.exit(-1)
+def main():
+    if len(sys.argv) < 5:
+        print("please enter a tx_sender, ip, subnet, and ASN to check if the advertised prefix matches the ASN. aka if valid")
+        sys.exit(-1)
 
-# All we're checking is an ip/subnet<=>ASN binding! Nothing else!
-inIP = IPv4Address(sys.argv[1])
-inSubnet = int(sys.argv[2])
-inASN = int(sys.argv[3])
+    # All we're checking is an ip/subnet<=>ASN binding! Nothing else!
+    tx_sender_name = str(sys.argv[1])
+    inIP = IPv4Address(sys.argv[2])
+    inSubnet = int(sys.argv[3])
+    inASN = int(sys.argv[4])
 
-load_dotenv(override=True)
+    # create accounts
+    tx_sender = Account(AccountType.TransactionSender, tx_sender_name)
+    tx_sender.load_account_keys()
 
-w3 = Web3(Web3.HTTPProvider(os.getenv("GANACHE_RPC_URL")))
+    tx_sender.generate_transaction_object("IANA", "CONTRACT_ADDRESS")
 
-# ABI (Application Binary Interface), An interface for interacting with methods in a smart contract 
-abi = utils.get_contract_abi("IANA")
+    # Validate the prefix<=>ASN mapping. Returns an enum.
+    validationResult = tx_sender.tx.sc_validatePrefix(int(inIP), inSubnet, inASN)
+    print(validationResult)
 
-#  call deploy.py Will get contract_address
-contract_address = utils.load_contract_address("CONTRACT_ADDRESS")
-
-#  Instantiate the contract object 
-iana = w3.eth.contract(address=contract_address, abi=abi)
-
-# Validate the prefix<=>ASN mapping. Returns an enum.
-validationResult = validatePrefixResult(iana.functions.prefix_validatePrefix(int(inIP), inSubnet, inASN).call())
-print(validationResult)
+    
+if __name__ == "__main__":
+    main()

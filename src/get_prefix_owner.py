@@ -1,41 +1,29 @@
-from compile import *
-from dotenv import load_dotenv
-import sys
-from utils.utils import *
+from Classes.Account import Account
+from Utils.Utils import *
 from ipaddress import IPv4Address
+import sys
 
-if len(sys.argv) < 3:
-    print("please enter an ip/subnet to get it's owner ASN")
-    sys.exit(-1)
+def main():
+    if len(sys.argv) < 4:
+        print("please enter a tx_sender, and ip/subnet to get the ip/subnet owner ASN")
+        sys.exit(-1)
 
-inIP = IPv4Address(sys.argv[1])
-inSubnet = int(sys.argv[2])
+    tx_sender_name = str(sys.argv[1])
+    inIP = IPv4Address(sys.argv[2])
+    inSubnet = int(sys.argv[3])
 
-load_dotenv(override=True)
+    # create accounts
+    tx_sender = Account(AccountType.TransactionSender, tx_sender_name)
+    tx_sender.load_account_keys()
 
-w3 = Web3(Web3.HTTPProvider(os.getenv("GANACHE_RPC_URL")))
-chain_id = 1337
+    tx_sender.generate_transaction_object("IANA", "CONTRACT_ADDRESS")
 
-my_address = os.getenv("ACCOUNT_ADDRESS")
-private_key = os.getenv("PRIVATE_KEY")
-
-# ABI (Application Binary Interface), An interface for interacting with methods in a smart contract 
-abi = json.loads(
-    compiled_sol["contracts"]["IANA.sol"]["IANA"]["metadata"]
-    )["output"]["abi"]
-
-#  call deploy.py Will get contract_address
-contract_address = os.getenv("CONTRACT_ADDRESS")
-
-#  Instantiate the contract object 
-iana = w3.eth.contract(address=contract_address, abi=abi)
+    asn = tx_sender.tx.sc_getPrefixOwner(int(inIP), inSubnet)
+    if str(asn) == "none" or asn == "0":
+        print("IANA owns the prefix: " + str(inIP) + "/" + str(inSubnet))
+    else:
+        print("ASN " + str(asn) + " owns the prefix: " + str(inIP) + "/" + str(inSubnet))
 
 
-# print("get ASN " + str(inASN) + " from ASN map")
-asn = iana.functions.getPrefixOwner(int(inIP), inSubnet).call()
-
-if str(asn) == "none" or asn == "0":
-    print("IANA owns the prefix: " + str(inIP) + "/" + str(inSubnet))
-else:
-    print("ASN " + str(asn) + " owns the prefix: " + str(inIP) + "/" + str(inSubnet))
-
+if __name__ == "__main__":
+    main()

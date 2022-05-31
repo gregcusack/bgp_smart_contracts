@@ -1,42 +1,28 @@
-from compile import *
-from dotenv import load_dotenv
-import sys
-from utils.utils import *
-# from ipaddress import IPv4Address
+from Classes.Account import Account
+from Utils.Utils import *
 import ipaddress
+import sys
 
-if len(sys.argv) < 2:
-    print("please enter an ASN to check if it exists")
-    sys.exit(-1)
+def main():
+    if len(sys.argv) < 3:
+        print("please enter a tx_sender, and an ASN to get all prefixes owned by the ASN")
+        sys.exit(-1)
 
-inASN = int(sys.argv[1])
+    tx_sender_name = str(sys.argv[1])
+    inASN = int(sys.argv[2])
 
-load_dotenv(override=True)
+    # create accounts
+    tx_sender = Account(AccountType.TransactionSender, tx_sender_name)
+    tx_sender.load_account_keys()
 
-w3 = Web3(Web3.HTTPProvider(os.getenv("GANACHE_RPC_URL")))
-chain_id = 1337
+    tx_sender.generate_transaction_object("IANA", "CONTRACT_ADDRESS")
 
-my_address = os.getenv("ACCOUNT_ADDRESS")
-private_key = os.getenv("PRIVATE_KEY")
+    prefix_list = tx_sender.tx.sc_getAllPrefixesOwnedByASN(inASN)
 
-# ABI (Application Binary Interface), An interface for interacting with methods in a smart contract 
-abi = json.loads(
-    compiled_sol["contracts"]["IANA.sol"]["IANA"]["metadata"]
-    )["output"]["abi"]
+    if len(prefix_list) == 0:
+        print("ASN " + str(inASN) + " owns no prefixes")
+    else:
+        [print(str(ipaddress.ip_address(prefix[0])) + "/" + str(prefix[1])) for prefix in prefix_list]
 
-#  call deploy.py Will get contract_address
-contract_address = os.getenv("CONTRACT_ADDRESS")
-
-#  Instantiate the contract object 
-iana = w3.eth.contract(address=contract_address, abi=abi)
-
-
-# print("get ASN " + str(inASN) + " from ASN map")
-prefix_list = iana.functions.getAllPrefixesOwnedByASN(inASN).call()
-
-if len(prefix_list) == 0:
-    print("ASN " + str(inASN) + " owns no prefixes")
-else:
-
-    [print(str(ipaddress.ip_address(prefix[0])) + "/" + str(prefix[1])) for prefix in prefix_list]
-    # print(prefix_list)
+if __name__ == "__main__":
+    main()

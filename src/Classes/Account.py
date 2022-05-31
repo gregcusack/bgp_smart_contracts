@@ -1,11 +1,15 @@
 from dotenv import load_dotenv
 import sys
-from utils.utils import *
-from Web3Obj import Web3Obj
-from Transaction import Transaction
+from Utils.Utils import *
+from Classes.Web3Obj import Web3Obj
+from Classes.Transaction import Transaction
 
 class Account(Web3Obj):
     def __init__(self, account_type, account_name):
+        if "ACCOUNT" not in account_name:
+            print("Account name not recognized. must be of form: ACCOUNT<N>, e.g. ACCOUNT2")
+            sys.exit(-1)
+
         self.w3 = Web3Obj.w3
         self.account_type = account_type
         self.account_name = account_name
@@ -14,7 +18,7 @@ class Account(Web3Obj):
         self.tx = None
 
     def load_account_keys(self):
-        self.public_key, self.private_key = utils.load_account_from_env_v2(self.account_name)
+        self.public_key, self.private_key = Utils.load_account_from_env_v2(self.account_name)
 
     def get_nonce(self):
         if self.public_key == None:
@@ -27,8 +31,13 @@ class Account(Web3Obj):
         self.tx.set_tx_sender_pub_key(self.public_key)
         self.tx.set_tx_sender_priv_key(self.private_key)
 
+    def generate_deploy_contract_object(self, contract_name):
+        self.tx = Transaction(contract_name)
+        self.tx.set_tx_sender_pub_key(self.public_key)
+        self.tx.set_tx_sender_priv_key(self.private_key)
+
     def hash_and_sign_message(self, data_types, data):
-        _, signed_message, err = utils.hash_and_sign_message(
+        _, signed_message, err = Utils.hash_and_sign_message(
             self.w3,
             data_types, 
             data,
@@ -40,6 +49,6 @@ class Account(Web3Obj):
         return signed_message, err
 
     def generate_signature_validation_data_from_signed_message(self, signed_message):
-        sigV, sigR, sigS = utils.generate_message_validation_data(signed_message)
+        sigV, sigR, sigS = Utils.generate_message_validation_data(signed_message)
         self.tx.set_signature_validation_data(sigV, sigR, sigS)
 

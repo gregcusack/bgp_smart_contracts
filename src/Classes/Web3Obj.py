@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 import sys
-from utils.utils import *
+from Utils.Utils import *
 from web3 import Web3
 
 class Web3Obj():

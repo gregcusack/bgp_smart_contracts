@@ -27,7 +27,7 @@ class validatePrefixResult(Enum):
     prefixOwnersDoNotMatch = 2
     
 
-class utils(object):
+class Utils(object):
     @staticmethod
     def is_null_address(inAddr):
         if str(inAddr) == "0x0000000000000000000000000000000000000000":
@@ -100,6 +100,15 @@ class utils(object):
         return json.loads(
             compiled_sol["contracts"][contract_name + ".sol"][contract_name]
             ["metadata"])["output"]["abi"]
+
+    #  Compiled bytecode of smart contract. Needed to deploy contract
+    @staticmethod
+    def get_contract_bytecode(contract_name):
+        """
+        Returns contract's bytecode. Need to deploy contract and get address
+        """
+        return compiled_sol["contracts"][contract_name + ".sol"][contract_name]["evm"]["bytecode"]["object"]
+
 
     @staticmethod
     def hash_and_sign_message(w3, argument_types, arguments, priv_key):
