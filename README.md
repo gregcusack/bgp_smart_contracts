@@ -26,6 +26,11 @@
 
 **Implementation done with cryptographic signings**
 
+##Install Python Dependancies
+1. web3 `sudo pip3 install web3`
+2. solc-x `sudo pip3 install py-solc-x`
+3. dotenv `sudo pip3 install python-dotenv`
+
 ### A couple notes
 The following accounts/addresses must be stored in .env
 - ACCOUNT0_ADDRESS, ACCOUNT0_PRIVATE_KEY
@@ -54,7 +59,7 @@ If use ACCOUNT0
 
 #### Add ASN1 to ASNMap
 ```
-python add_asn.py <account0> <account1> <ASN1> <account2_address>
+python add_asn.py <account0> <account1> <ASN1> <account1_address>
 ```
 e.g.
 ```
