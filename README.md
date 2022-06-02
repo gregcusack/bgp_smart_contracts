@@ -26,7 +26,7 @@
 
 **Implementation done with cryptographic signings**
 
-##Install Python Dependancies
+## Install Python Dependancies
 1. web3 `sudo pip3 install web3`
 2. solc-x `sudo pip3 install py-solc-x`
 3. dotenv `sudo pip3 install python-dotenv`
