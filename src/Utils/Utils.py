@@ -26,6 +26,10 @@ class validatePrefixResult(Enum):
     prefixValid = 0
     prefixNotRegistered = 1
     prefixOwnersDoNotMatch = 2
+
+class valdiateAdvertisementResult(Enum):
+    advertisementVALID = 0
+    advertisementINVALID = 1
     
 
 class Utils(object):

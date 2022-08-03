@@ -141,3 +141,21 @@ class Transaction():
         Returns if prefix<=>ASN binding is valid
         """
         return validatePrefixResult(self.iana.functions.prefix_validatePrefix(inIP, inSubnet, inASN).call())
+
+    def sc_addAdvertisementToMyContract(self, tx_sender_nonce, inIp, inSubnet, inNextHop):
+        """
+        Add an advertisement to my own advertisement contract
+        """
+        transaction = self.iana.functions.addAdvertisement(inIp, inSubnet, inNextHop).buildTransaction({
+            "gasPrice": self.w3.eth.gas_price,
+            "chainId": self.chain_id, 
+            "from": self.tx_sender_pub_key, 
+            "nonce": tx_sender_nonce
+        })
+        return transaction
+
+    def sc_validateAdvertisement(self, inIp, inSubnet, inPrevHop):
+        """
+        Validate an advertisement received from downstream AS.
+        """
+        return valdiateAdvertisementResult(self.iana.functions.validateAdvertisement(inIp, inSubnet, inPrevHop).call())
