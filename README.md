@@ -184,10 +184,12 @@ Example:
 A1: 10.0.20.0/24 : 1
   - writes to 1's own advertisement contract {10.0.20.0/24, nextHop = 2}
   - sends A1 to 2
+
 A2: 10.0.20.0/24 : 2, 1
   - checks there is a 10.0.20.0/24 with next hop 2 in 1's advertisement contract
   - writes to 2's own advertisement contract {10.0.20.0/2, nextHop = 3}
   - sends A2 to 3
+
 A3: 10.0.20.0/24 : 3, 2, 1
   - checks there is a 10.0.20.0/24 with next hop 3 in 2's advertisement contract
   - checks there is a 10.0.20.0/24 with next hop 2 in 1's advertisement contract
