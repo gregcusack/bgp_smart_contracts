@@ -3,9 +3,11 @@ from web3 import Web3
 from eth_account.messages import encode_defunct
 from dotenv import load_dotenv
 from eth_account.messages import encode_defunct, _hash_eip191_message
+from Config import ROOT_DIR
 import os
 import json
 from enum import Enum
+import yaml
 
 class TxErrorType(Enum):
     OK = 0
@@ -25,6 +27,10 @@ class validatePrefixResult(Enum):
     prefixValid = 0
     prefixNotRegistered = 1
     prefixOwnersDoNotMatch = 2
+
+class valdiateAdvertisementResult(Enum):
+    advertisementVALID = 0
+    advertisementINVALID = 1
     
 
 class Utils(object):
@@ -97,9 +103,12 @@ class Utils(object):
         :return: contract abi
         """
 
-        return json.loads(
-            compiled_sol["contracts"][contract_name + ".sol"][contract_name]
-            ["metadata"])["output"]["abi"]
+        compiled_json_path = os.path.join(ROOT_DIR, 'compiled_json/compiled_' + contract_name + '_code.json')
+        with open(compiled_json_path, "r") as f:
+            compiled_sol = json.load(f)
+            return json.loads(
+                compiled_sol["contracts"][contract_name + ".sol"][contract_name]
+                ["metadata"])["output"]["abi"]
 
     #  Compiled bytecode of smart contract. Needed to deploy contract
     @staticmethod
@@ -107,7 +116,10 @@ class Utils(object):
         """
         Returns contract's bytecode. Need to deploy contract and get address
         """
-        return compiled_sol["contracts"][contract_name + ".sol"][contract_name]["evm"]["bytecode"]["object"]
+        compiled_json_path = os.path.join(ROOT_DIR, 'compiled_json/compiled_' + contract_name + '_code.json')
+        with open(compiled_json_path, "r") as f:
+            compiled_sol = json.load(f)
+            return compiled_sol["contracts"][contract_name + ".sol"][contract_name]["evm"]["bytecode"]["object"]
 
 
     @staticmethod
@@ -202,7 +214,16 @@ class Utils(object):
 
         return tx_hash, tx_receipt, 0  
         
-
+    @staticmethod
+    def load_yaml(yaml_path):
+        """
+        Load any yaml file and return it to caller
+        """
+        with open(yaml_path, 'r') as f:
+            try:
+                return yaml.safe_load(f)
+            except yaml.YAMLError as e:
+                print("ERROR PARSING YAML: {}", e)
 
             
            
