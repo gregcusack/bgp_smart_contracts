@@ -7,6 +7,7 @@ from Config import ROOT_DIR
 import os
 import json
 from enum import Enum
+import yaml
 
 class TxErrorType(Enum):
     OK = 0
@@ -213,7 +214,16 @@ class Utils(object):
 
         return tx_hash, tx_receipt, 0  
         
-
+    @staticmethod
+    def load_yaml(yaml_path):
+        """
+        Load any yaml file and return it to caller
+        """
+        with open(yaml_path, 'r') as f:
+            try:
+                return yaml.safe_load(f)
+            except yaml.YAMLError as e:
+                print("ERROR PARSING YAML: {}", e)
 
             
            

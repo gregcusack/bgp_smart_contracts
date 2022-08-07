@@ -55,31 +55,44 @@ def main():
     inSubnet = int(sys.argv[3])
     myASN = int(sys.argv[4])
 
-    AS_PATH = []
-    contract_addresses = []
-    for i in range(5, len_args):
-        asn = sys.argv[i]
-        AS_PATH.append(int(asn))
-        contract_addresses.append("ACCOUNT" + str(int(asn)-1) + "_PATH_VALIDATION_CONTRACT")
-
-    asn_contract_zip = zip(AS_PATH, contract_addresses)
 
     # create accounts
     tx_sender = Account(AccountType.TransactionSender, tx_sender_name)
     tx_sender.load_account_keys()
+    tx_sender.load_asn_contract_mappings()
 
-    print(AS_PATH)
-    print(contract_addresses)
+    AS_PATH_contract_mappings = {}
 
-    # need to load a map here that maps ASN to the ASN's path_validation contract address
-    # hack for now. ASN1 = contract0, ASN2 = contract1, etc
-    nextHop = myASN
-    for ASN, contract_address in asn_contract_zip:
+    AS_PATH = []
+    contract_addresses = []
+    for i in range(5, len_args):
+        asn = sys.argv[i]
+        AS_PATH.append(str(asn))
+        asn_str = "asn_" + str(asn)
+
+        # take only the asn=>contract mappings from the yaml config that are in the input AS_PATH and put them in the AS_PATH_contract_mappings dict
+        # |AS_PATH_contract_mappings| <= |tx_sender.asn_contract_mappings| (always!)
+        if asn_str in tx_sender.asn_contract_mappings:
+            AS_PATH_contract_mappings[int(asn)] = tx_sender.asn_contract_mappings[asn_str]["validation_contract"]
+        else:
+            print("ERROR! No PATH_VALDIATION contract known for ASN (" + str(asn) + ")")
+            sys.exit(-1)
+
+    path_validation_result = {}
+    nextHopAsn = myASN
+    for asn_in_path, contract_address in AS_PATH_contract_mappings.items():
         # we actually need to pass in the contract address here. or we can do something with a config file
-        tx_sender.generate_transaction_object("PATH_VALIDATION", contract_address)
-        tx = tx_sender.tx.sc_validateAdvertisement(int(inIP), inSubnet, nextHop)
-        nextHop = ASN
-        print(tx)
+        tx_sender.generate_transaction_object("PATH_VALIDATION", contract_address, True)
+        tx = tx_sender.tx.sc_validateAdvertisement(int(inIP), inSubnet, nextHopAsn)
+        path_validation_result[asn_in_path] = {"nextHop": nextHopAsn, "result": tx}
+        nextHopAsn = asn_in_path
+        # print(tx)
+    
+    print("AS_PATH Validation Results for: \"" + str(inIP) + "/" + str(inSubnet) + " : " + ', '.join(AS_PATH) + "\" ")
+    for hop, result in path_validation_result.items():
+        print("ASN " + str(hop) + " -> ASN " + str(result["nextHop"]) + " hop in AS_PATH is: " + str(result["result"]))
+
+
 
 if __name__ == "__main__":
     main()

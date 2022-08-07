@@ -5,13 +5,17 @@ from Classes.Web3Obj import Web3Obj
 
 # in an ideal world, i think we should have: contract, transaction, tx_sender, msg_signer objects
 class Transaction():
-    def __init__(self, contract_name, contract_address_env=None):
+    def __init__(self, contract_name, contract_address_env=None, address_from_config=None):
         load_dotenv()
         self.w3 = Web3Obj.w3
         self.chain_id = Utils.load_chain_id()
         self.abi = Utils.get_contract_abi(contract_name) # ex: IANA
         
-        if contract_address_env:
+
+        if contract_address_env and address_from_config: #contract address from yaml config
+            self.contract_address = contract_address_env
+            self.iana = self.w3.eth.contract(address=self.contract_address, abi=self.abi)
+        elif contract_address_env: # contract address is in env
             self.contract_address = Utils.load_contract_address(contract_address_env) # ex: CONTRACT_ADDRESS
             self.iana = self.w3.eth.contract(address=self.contract_address, abi=self.abi)
         else:
