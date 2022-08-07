@@ -177,9 +177,9 @@ python validate_prefix.py ACCOUNT1 100.0.100.0 24 200
   - Contract contains:
     - Prefix and the ASN of the next Hop
 
-## Example
-Example:
-1 -> 2 -> 3 -> 4 -> ...
+### Example
+ASNs in order sending an update message for 10.0.20.0/24
+- Path: 1 -> 2 -> 3 -> 4 -> ...
 
 A1: 10.0.20.0/24 : 1
   - writes to 1's own advertisement contract {10.0.20.0/24, nextHop = 2}
