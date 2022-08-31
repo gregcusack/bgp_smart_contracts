@@ -3,6 +3,11 @@ from Utils.Utils import *
 from ipaddress import IPv4Address
 import sys
 
+#python deploy.py ACCOUNT0 <contract_name>
+# python deploy.py ACCOUNT0 PATH_VALIDATION
+# python deploy.py ACCOUNT0 IANA
+
+
 def main():
     if len(sys.argv) < 3:
         print("please enter a tx_sender (e.g. ACCOUNT0) to deploy contract from and a contract name (e.g. IANA, PATH_VALIDATION)")

@@ -4,7 +4,8 @@ import sys
 from Config import ROOT_DIR
 from web3 import Web3
 
-
+# python compile.py PATH_VALIDATION
+# python compile.py IANA
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("please enter a contract to contract (e.g. IANA, PATH_VALIDATION, etc")
@@ -20,8 +21,6 @@ if __name__ == "__main__":
     with open(contract_path, 'r', encoding='utf-8') as f:
         contract_file = f.read()
 
-    # with open('../contracts/' + contract + '.sol', 'r', encoding='utf-8') as f:
-    #     contract_file = f.read()
 
     #  download 0.8.0 Version of Solidity compiler 
     install_solc('0.8.0')

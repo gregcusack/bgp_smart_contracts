@@ -41,7 +41,6 @@ python validate_advertisement.py ACCOUNT1 10.0.20.0 24 3 2 1
 ## check down path that paths 3->4, 2->3, and 1->2 exist
 python validate_advertisement.py ACCOUNT1 10.0.20.0 24 4 3 2 1
 
-Caviate here: we assume ASN1 = contract0, ASN2 = contract1, etc
 """
 
 def main():

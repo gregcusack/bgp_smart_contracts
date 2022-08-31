@@ -11,7 +11,7 @@ def main():
     tx_sender_name = str(sys.argv[1])
     inIP = IPv4Address(sys.argv[2])
     inSubnet = int(sys.argv[3])
-    inNextHop = int(sys.argv[4])
+    inNextHop = int(sys.argv[4]) #e.g. 2
 
     # create accounts
     tx_sender = Account(AccountType.TransactionSender, tx_sender_name)
