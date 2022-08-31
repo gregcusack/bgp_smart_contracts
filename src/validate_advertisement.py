@@ -86,7 +86,7 @@ def main():
         path_validation_result[asn_in_path] = {"nextHop": nextHopAsn, "result": tx}
         nextHopAsn = asn_in_path
         # print(tx)
-    
+
     print("AS_PATH Validation Results for: \"" + str(inIP) + "/" + str(inSubnet) + " : " + ', '.join(AS_PATH) + "\" ")
     for hop, result in path_validation_result.items():
         print("ASN " + str(hop) + " -> ASN " + str(result["nextHop"]) + " hop in AS_PATH is: " + str(result["result"]))

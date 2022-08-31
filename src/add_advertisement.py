@@ -25,13 +25,13 @@ def main():
     data = [int(inIP), inSubnet, inNextHop]
 
     # Generate deploy contract transaction object
-    tx = tx_sender.tx.sc_addAdvertisementToMyContract(tx_sender.get_nonce(), int(inIP), inSubnet, inNextHop)
+    tx = tx_sender.tx.sc_addAdvertisementToMyContract(tx_sender.get_nonce(), int(inIP), inSubnet, inNextHop, )
     # sign and deploy contract
     tx_hash, tx_receipt, err = tx_sender.tx.sign_and_execute_transaction(tx)
     if TxErrorType(err) != TxErrorType.OK:
         print("ERROR: " + str(TxErrorType(err)) + ". Contract failed to execute! Advertisement not added!")
-        
+
     print("SUCCESS: advertisement: {" + str(inIP) + "/" + str(inSubnet) + " -> " + str(inNextHop) + "} added")
-    
+
 if __name__ == "__main__":
     main()

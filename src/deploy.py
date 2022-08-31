@@ -29,7 +29,7 @@ def main():
     tx_hash, tx_receipt, err = tx_sender.tx.sign_and_execute_transaction(tx)
     if TxErrorType(err) != TxErrorType.OK:
         print("ERROR: " + str(TxErrorType(err)) + ". Contract NOT deployed. Transaction failed")
-        
+
     print("SUCCESS: " + contract_to_deploy + " Contract deployed")
     print("Contract address: " + tx_receipt.contractAddress)
 
