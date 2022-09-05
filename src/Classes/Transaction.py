@@ -163,4 +163,4 @@ class Transaction():
         """
         Validate an advertisement received from downstream AS.
         """
-        return valdiateAdvertisementResult(self.iana.functions.validateAdvertisement(inIp, inSubnet, inPrevHop).call())
+        return validateAdvertisementResult(self.iana.functions.validateAdvertisement(inIp, inSubnet, inPrevHop).call())
