@@ -28,9 +28,15 @@ class validatePrefixResult(Enum):
     prefixNotRegistered = 1
     prefixOwnersDoNotMatch = 2
 
-class valdiateAdvertisementResult(Enum):
+class validateAdvertisementResult(Enum):
     advertisementVALID = 0
     advertisementINVALID = 1
+    nonParticipantSource = 2
+
+class validatePathResult(Enum):
+    pathVALID = 0
+    pathINVALID = 1
+    pathPnpVALID = 2
     
 
 class Utils(object):

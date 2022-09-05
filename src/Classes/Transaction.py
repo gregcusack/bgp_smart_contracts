@@ -11,12 +11,14 @@ class Transaction():
         self.chain_id = Utils.load_chain_id()
         self.abi = Utils.get_contract_abi(contract_name) # ex: IANA
         
-
         if contract_address_env and address_from_config: #contract address from yaml config
             self.contract_address = contract_address_env
             self.iana = self.w3.eth.contract(address=self.contract_address, abi=self.abi)
         elif contract_address_env: # contract address is in env
-            self.contract_address = Utils.load_contract_address(contract_address_env) # ex: CONTRACT_ADDRESS
+            self.contract_address = Utils.load_contract_address(contract_address_env) # ex: IANA_CONTRACT_ADDRESS
+            if not self.contract_address:
+                print("ERROR: contract with name: " + contract_address_env + " not found in .env. Exiting...")
+                sys.exit(-1)
             self.iana = self.w3.eth.contract(address=self.contract_address, abi=self.abi)
         else:
             # bytecode of contract for deploy
@@ -63,16 +65,15 @@ class Transaction():
     ############## CONTRACT TRANSACTIONS ################
     def deploy_smart_contract(self, tx_sender_nonce):
         """
-        Deploy smart contract  -> Creates transaction 
+        Deploy smart contract  -> Creates transaction
         """
         transaction = self.iana.constructor().buildTransaction({
             "gasPrice": self.w3.eth.gas_price,
-            "chainId": self.chain_id, 
-            "from": self.tx_sender_pub_key, 
+            "chainId": self.chain_id,
+            "from": self.tx_sender_pub_key,
             "nonce": tx_sender_nonce
         })
         return transaction
-    
 
     def sc_addASN(self, tx_sender_nonce, inASN, inAddress):
         """
@@ -152,8 +153,8 @@ class Transaction():
         """
         transaction = self.iana.functions.addAdvertisement(inIp, inSubnet, inNextHop).buildTransaction({
             "gasPrice": self.w3.eth.gas_price,
-            "chainId": self.chain_id, 
-            "from": self.tx_sender_pub_key, 
+            "chainId": self.chain_id,
+            "from": self.tx_sender_pub_key,
             "nonce": tx_sender_nonce
         })
         return transaction
@@ -162,4 +163,4 @@ class Transaction():
         """
         Validate an advertisement received from downstream AS.
         """
-        return valdiateAdvertisementResult(self.iana.functions.validateAdvertisement(inIp, inSubnet, inPrevHop).call())
+        return validateAdvertisementResult(self.iana.functions.validateAdvertisement(inIp, inSubnet, inPrevHop).call())
