@@ -1,7 +1,7 @@
 # bgp_smart_contracts
 
 
-## TODO (written: 5/29/22) (updated: 8/7/22):
+## TODO (written: 5/29/22) (updated: 9/5/22):
 1) Make the below programs easier to run
     [x] pass in "owner" and "modifier" accounts in command line
     [x] I should be able to toggle between any of the three accounts across all python scripts instead of having to go in and change the account we're reading from in the env file. it's confusing lol
@@ -11,6 +11,7 @@
     - [x] Validate Prefix
     - [x] Add Advertisement
     - [x] Valdiate Advertisement 
+    - [x] Partial Deployment Support - P -> NP -> P 
 3) BGP Code integration
     - [x] Add Origin Validation into BGP code
     - [ ] Add Path Validation to BGP code
