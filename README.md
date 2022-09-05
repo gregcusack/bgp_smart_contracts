@@ -331,7 +331,7 @@ Example:
 python add_advertisement.py ACCOUNT1 10.0.20.0 24 200
 python add_advertisement.py ACCOUNT2 10.0.20.0 24 300
 python add_advertisement.py ACCOUNT3 10.0.20.0 24 400
-# skip accouncement from 400 to 500. 
+# skip announcement from 400 to 500. 
 python add_advertisement.py ACCOUNT5 10.0.20.0 24 600
 ```
 
@@ -342,7 +342,7 @@ python add_advertisement.py ACCOUNT5 10.0.20.0 24 600
 python validate_advertisement.py <account2> <ip> <subnet> <myASN> <Received advertisement's AS_PATH>
 ```
 
-#### Example 1: Invalid path
+#### Example 2: Non participant in path
 Account 6 (ASN600) needs to validate that the entire 100 -> 200 -> 300 -> 400 -> 500 -> 600 is valid
 ```
 python validate_advertisement.py ACCOUNT6 10.0.20.0 24 600 500 400 300 200 10
