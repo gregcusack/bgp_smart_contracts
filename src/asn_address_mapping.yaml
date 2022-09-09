@@ -1,16 +1,16 @@
 ---
 asn_0:
-  validation_contract: "0x0ce5481Fb3a5Eacd0bEF0aab373E6CE8B5e83965"
+  validation_contract: "0xCfEB869F69431e42cdB54A4F4f105C19C080A601"
 asn_100:
-  validation_contract: "0x6Aab6F0632A437c0D93e83A71C4aAa12459e8005"
+  validation_contract: "0xD3aA556287Afe63102e5797BFDDd2A1E8DbB3eA5"
 asn_200:
-  validation_contract: "0x12F2dCad475184E0ce07eE20d549E87900242145"
+  validation_contract: "0x17e91224c30c5b0B13ba2ef1E84FE880Cb902352"
 asn_300:
-  validation_contract: "0xf426a8a4Ab57ff25d6BC8B6a027C9f662eb872cf"
-# asn_400:
-#   validation_contract: "0x198596e114B30fD944D62b3E3569a55D30d23927"
+  validation_contract: "0x51b1fC85AA11031246013A2E371Dc644cad9244C"
+asn_400:
+  validation_contract: "0x2249F43fB8C546fd644555be4Dc5a39068dE3De4"
 asn_500:
-  validation_contract: "0x6dC66c496A9BCd33b866f856fBE9373679Df871b"
+  validation_contract: "0x646A336CD183dc947D3AdbEfb19c3cF637720318"
 asn_600:
-  validation_contract: "0x65eeDCDEAEcBf574687D68F7235320a95C7C1FA8"
+  validation_contract: "0x85e855b22F01BdD33eE194490c7eB16b7EdaC019"
 

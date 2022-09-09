@@ -45,6 +45,11 @@ if __name__ == "__main__":
     )
 
     #  The compiled results are written to the file 
+    compiled_json_dir = os.path.join(ROOT_DIR, 'compiled_json/')
+    exists = os.path.exists(compiled_json_dir)
+    if not exists:
+        os.makedirs(compiled_json_dir)
+
     compiled_json_path = os.path.join(ROOT_DIR, 'compiled_json/compiled_' + contract + '_code.json')
     with open(compiled_json_path, 'w') as f:
         json.dump(compiled_sol, f)
